@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#f4f4f4;
+}
+
+header{
+    background:#c62828;
+    color:white;
+    padding:15px;
+    text-align:center;
+}
+
+.container{
+    width:95%;
+    max-width:1200px;
+    margin:20px auto;
+}
+
+.card{
+    background:white;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:20px;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th,td{
+    border:1px solid #ddd;
+    padding:10px;
+    text-align:left;
+}
+
+th{
+    background:#c62828;
+    color:white;
+}
+
+select{
+    padding:6px;
+}
+
+button{
+    background:#c62828;
+    color:white;
+    border:none;
+    padding:8px 15px;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:15px;
+}
+
+.box{
+    background:white;
+    padding:20px;
+    text-align:center;
+    border-radius:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+
+.box h2{
+    margin:0;
+    color:#c62828;
+}
+</style>
+
+</head>
+
+<body>
+
+<header>
+<h1>🥩 Door To Door Fresh Meat Admin</h1>
+</header>
+
+<div class="container">
+
+<div class="stats">
+
+<div class="box">
+<h2 id="orders">0</h2>
+<p>Total Orders</p>
+</div>
+
+<div class="box">
+<h2 id="pending">0</h2>
+<p>Pending</p>
+</div>
+
+<div class="box">
+<h2 id="delivered">0</h2>
+<p>Delivered</p>
+</div>
+
+<div class="box">
+<h2>₹<span id="sales">0</span></h2>
+<p>Total Sales</p>
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>Orders</h2>
+
+<table>
+
+<thead>
+
+<tr>
+<th>Order ID</th>
+<th>Customer</th>
+<th>Phone</th>
+<th>Total</th>
+<th>Status</th>
+</tr>
+
+</thead>
+
+<tbody id="orderTable">
+
+<tr>
+<td colspan="5" style="text-align:center;">
+Orders will appear here
+</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+</div>
+
+<script>
+
+fetch("https://script.google.com/macros/s/AKfycbzS-fgday49ir-iBrjfyg7ZUrgdf7zfFURCVrDqJHQo3mmNCdVpRjRMM_C4WFZIQOKWbQ/exec")
+.then(response => response.json())
+.then(orders => {
+
+let totalOrders = orders.length;
+let pending = 0;
+let delivered = 0;
+let totalSales = 0;
+
+let html = "";
+
+orders.forEach(order => {
+
+if(order.status === "Pending") pending++;
+if(order.status === "Delivered") delivered++;
+
+totalSales += Number(order.grandTotal);
+
+
+html += `
+<tr>
+<td>${order.orderId}</td>
+<td>${order.customerName}</td>
+<td>${order.phone}</td>
+<td>₹${order.grandTotal}</td>
+<td>
+<select onchange="updateStatus('${order.orderId}', this.value)">
+<option value="Pending" ${order.status=="Pending"?"selected":""}>Pending</option>
+<option value="Delivered" ${order.status=="Delivered"?"selected":""}>Delivered</option>
+</select>
+</td>
+</tr>
+`;
+});
+
+document.getElementById("orderTable").innerHTML = html;
+
+document.getElementById("orders").innerText = totalOrders;
+document.getElementById("pending").innerText = pending;
+document.getElementById("delivered").innerText = delivered;
+document.getElementById("sales").innerText = totalSales;
+
+});
+function updateStatus(orderId, status) {
+
+  fetch("https://script.google.com/macros/s/AKfycbzS-fgday49ir-iBrjfyg7ZUrgdf7zfFURCVrDqJHQo3mmNCdVpRjRMM_C4WFZIQOKWbQ/exec", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      action: "updateStatus",
+      orderId: orderId,
+      status: status
+    })
+  })
+  .then(response => response.text())
+  .then(text => {
+    console.log("Server Response:", text);
+    alert(text);
+
+    if (text === "Updated") {
+      location.reload();
+    }
+  })
+  .catch(error => {
+    console.error(error);
+    alert("Error: " + error);
+  });
+
+}
+
+</script>
+
+</body>
+</html>
